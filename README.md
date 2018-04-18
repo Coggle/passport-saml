@@ -52,6 +52,7 @@ passport.use(new SamlStrategy(
   * `host`: host for callback; will be combined with path and protocol to construct callback url if `callbackUrl` is not specified (default: `localhost`)
   * `entryPoint`: identity provider entrypoint
   * `issuer`: issuer string to supply to identity provider
+  * `audience`: expected saml response Audience (if not provided, Audience won't be verified)
   * `cert`: see [Security and signatures](#security-and-signatures)
   * `privateCert`: see [Security and signatures](#security-and-signatures)
   * `decryptionPvk`: optional private key that will be used to attempt to decrypt any encrypted assertions that are received
@@ -62,7 +63,7 @@ passport.use(new SamlStrategy(
   * `identifierFormat`: if truthy, name identifier format to request from identity provider (default: `urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress`)
   * `acceptedClockSkewMs`: Time in milliseconds of skew that is acceptable between client and server when checking `OnBefore` and `NotOnOrAfter` assertion condition validity timestamps.  Setting to `-1` will disable checking these conditions entirely.  Default is `0`.
   * `attributeConsumingServiceIndex`: optional `AttributeConsumingServiceIndex` attribute to add to AuthnRequest to instruct the IDP which attribute set to attach to the response ([link](http://blog.aniljohn.com/2014/01/data-minimization-front-channel-saml-attribute-requests.html))
-  * `disableRequestedAuthnContext`: if truthy, do not request a specific auth context
+  * `disableRequestedAuthnContext`: if truthy, do not request a specific authentication context. This is [known to help when authenticating against Active Directory](https://github.com/bergie/passport-saml/issues/226) (AD FS) servers.
   * `authnContext`: if truthy, name identifier format to request auth context (default: `urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport`)
   * `forceAuthn`: if set to true, the initial SAML request from the service provider specifies that the IdP should force re-authentication of the user, even if they possess a valid session.
   * `providerName`: optional human-readable name of the requester for use by the presenter's user agent or the identity provider
@@ -75,6 +76,9 @@ passport.use(new SamlStrategy(
   * `generateUniqueID`: if set, override the function used to generate unique IDs for the `InResponseTo` attribute of generated requests.  
  * **Passport**
   * `passReqToCallback`: if truthy, `req` will be passed as the first argument to the verify callback (default: `false`)
+  * `name`: Optionally, provide a custom name. (default: `saml`). Useful If you want to instantiate the strategy multiple times with different configurations,
+            allowing users to authenticate against multiple different SAML targets from the same site. You'll need to use a unique set of URLs
+            for each target, and use this custom name when calling `passport.authenticate()` as well.
  * **Logout**
   * `logoutUrl`: base address to call with logout requests (default: `entryPoint`)
   * `additionalLogoutParams`: dictionary of additional query params to add to 'logout' requests
@@ -127,7 +131,7 @@ For example:
 ```
 
 
-It is a good idea to validate the incoming SAML Responses. For this, you can provide the Identity Provider's public PEM-encoded X.509 certificate using the `cert` confguration key. The "BEGIN CERTIFICATE" and "END CERTIFICATE" lines should be stripped out and the certificate should be provided on a single line.
+It is a good idea to validate the signatures of the incoming SAML Responses. For this, you can provide the Identity Provider's public PEM-encoded X.509 signing certificate using the `cert` confguration key. The "BEGIN CERTIFICATE" and "END CERTIFICATE" lines should be stripped out and the certificate should be provided on a single line.
 
 ```javascript
     cert: 'MIICizCCAfQCCQCY8tKaMc0BMjANBgkqh ... W=='
@@ -168,7 +172,7 @@ Here is a configuration that has been proven to work with ADFS:
 
 Please note that ADFS needs to have a trust established to your service in order for this to work.
 
-For more detailed instructions, see [ADSF documentation](docs/adfs/README.md).
+For more detailed instructions, see [ADFS documentation](docs/adfs/README.md).
 
 ## SAML Response Validation - NotBefore and NotOnOrAfter
 
@@ -226,6 +230,10 @@ function callback(err, result)
 ```
 
 Provide an instance of an object which has these functions passed to the `cacheProvider` config option when using Passport-SAML.
+
+## ChangeLog
+
+See [Releases](https://github.com/bergie/passport-saml/releases) to find the changes that go into each release.
 
 ## FAQ
 
