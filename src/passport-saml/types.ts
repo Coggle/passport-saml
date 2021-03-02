@@ -59,6 +59,7 @@ export interface SamlOptions extends SamlSigningOptions {
   validateInResponseTo: boolean;
   requestIdExpirationPeriodMs: number;
   cacheProvider: CacheProvider;
+  generateUniqueID: () => string;
 
   // Logout
   logoutUrl: string;
